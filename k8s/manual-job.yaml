@@ -1,0 +1,15 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: manual-auto-snapshot
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - name: auto-snapshot
+        image: loicmahieu/google-compute-auto-snapshot:latest
+        env:
+        - name: PROJECT_ID
+          value: TO_DEFINE
+      restartPolicy: Never

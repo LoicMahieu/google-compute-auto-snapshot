@@ -1,0 +1,22 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: auto-snapshot
+spec:
+  # Time is server time (UTC)
+  schedule: "00 02 * * *"
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          containers:
+          - name: auto-snapshot
+            image: loicmahieu/google-compute-auto-snapshot:latest
+            env:
+            - name: PROJECT_ID
+              value: TO_DEFINE
+          restartPolicy: Never
