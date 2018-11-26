@@ -11,6 +11,30 @@ gcloud-snapshot.sh will:
 - Take a snapshot of each Disk
 - The script will then delete all associated snapshots taken by the script for the Instance that are older than 7 days (optional: [default snapshot retention can be changed by using -d flag](#snapshot-retention))
 
+## Usage
+
+```sh
+docker run --rm -it --volumes-from gcloud-config \
+  -e PROJECT_ID=myProject \
+  loicmahieu/google-compute-auto-snapshot
+```
+
+Custom filter :
+```sh
+docker run --rm -it --volumes-from gcloud-config \
+  -e PROJECT_ID=myProject \
+  -e DEVICE_LIST_FILTER='labels.mykey = myvalue' \
+  loicmahieu/google-compute-auto-snapshot
+```
+
+Filter for snapshot (Used for create and delete snapshots) :
+```sh
+docker run --rm -it --volumes-from gcloud-config \
+  -e PROJECT_ID=myProject \
+  -e SNAPSHOT_LABEL='mykey=myvalue' \
+  loicmahieu/google-compute-auto-snapshot
+```
+
 ## License
 
 MIT License

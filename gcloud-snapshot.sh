@@ -25,6 +25,10 @@ usage() {
   echo -e "          [REQUIRED]"
   echo -e "    -d    Number of days to keep snapshots.  Snapshots older than this number deleted."
   echo -e "          Default if not set: 7 [OPTIONAL]"
+  echo -e "    -f    Filter devices list."
+  echo -e "          Default if not set: 'labels.auto-snapshot = true' [OPTIONAL]"
+  echo -e "    -l    Snapshot label. Used for create and delete snapshots."
+  echo -e "          [OPTIONAL]"
   echo -e "\n"
   exit 1
 }
@@ -36,7 +40,7 @@ usage() {
 
 setScriptOptions()
 {
-    while getopts ":d:p:" o; do
+    while getopts ":d:p:f:l:" o; do
       case "${o}" in
         d)
           opt_d=${OPTARG}
@@ -45,7 +49,12 @@ setScriptOptions()
         p)
           opt_p=${OPTARG}
           ;;
-
+        f)
+          opt_f=${OPTARG}
+          ;;
+        l)
+          opt_l=${OPTARG}
+          ;;
         *)
           usage
           ;;
@@ -65,6 +74,16 @@ setScriptOptions()
     else
       OLDER_THAN=7
     fi
+
+    if [[ -n $opt_f ]];then
+      DEVICE_LIST_FILTER=$opt_f
+    else
+      DEVICE_LIST_FILTER=${DEVICE_LIST_FILTER:-'labels.auto-snapshot = true'}
+    fi
+
+    if [[ -n $opt_l ]];then
+      SNAPSHOT_LABEL=$opt_l
+    fi
 }
 
 
@@ -76,7 +95,7 @@ setScriptOptions()
 
 getDeviceList()
 {
-    echo "$(gcloud --project=$PROJECT_ID compute disks list --filter 'labels.auto-snapshot = true' --format='value(name)')"
+    echo "$(gcloud --project=$PROJECT_ID compute disks list --filter "$DEVICE_LIST_FILTER" --format='value(name)')"
 }
 
 
@@ -134,6 +153,9 @@ createSnapshotName()
 createSnapshot()
 {
     echo -e "$(gcloud --project=$PROJECT_ID compute disks snapshot $1 --snapshot-names $2 --zone $3)"
+    if [[ -n $SNAPSHOT_LABEL ]]; then
+        echo -e "$(gcloud --project=$PROJECT_ID compute snapshots add-labels $2 --labels=$SNAPSHOT_LABEL)"
+    fi
 }
 
 
@@ -149,8 +171,13 @@ getSnapshots()
     # create empty array
     SNAPSHOTS=()
 
+    local GETSNAPSHOTS_FILTER="name~'"$1"'"
+    if [[ -n $SNAPSHOT_LABEL ]]; then
+        GETSNAPSHOTS_FILTER="$GETSNAPSHOTS_FILTER AND labels.$SNAPSHOT_LABEL"
+    fi
+
     # get list of snapshots from gcloud for this device
-    local gcloud_response="$(gcloud --project=$PROJECT_ID compute snapshots list --filter="name~'"$1"'" --uri)"
+    local gcloud_response="$(gcloud --project=$PROJECT_ID compute snapshots list --filter="$GETSNAPSHOTS_FILTER" --uri)"
 
     # loop through and get snapshot name from URI
     while read line
