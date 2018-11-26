@@ -25,6 +25,8 @@ usage() {
   echo -e "          [REQUIRED]"
   echo -e "    -d    Number of days to keep snapshots.  Snapshots older than this number deleted."
   echo -e "          Default if not set: 7 [OPTIONAL]"
+  echo -e "    -f    Filter devices list."
+  echo -e "          Default if not set: 'labels.auto-snapshot = true' [OPTIONAL]"
   echo -e "\n"
   exit 1
 }
@@ -36,7 +38,7 @@ usage() {
 
 setScriptOptions()
 {
-    while getopts ":d:p:" o; do
+    while getopts ":d:p:f:" o; do
       case "${o}" in
         d)
           opt_d=${OPTARG}
@@ -45,7 +47,9 @@ setScriptOptions()
         p)
           opt_p=${OPTARG}
           ;;
-
+        f)
+          opt_f=${OPTARG}
+          ;;
         *)
           usage
           ;;
@@ -65,6 +69,12 @@ setScriptOptions()
     else
       OLDER_THAN=7
     fi
+
+    if [[ -n $opt_f ]];then
+      DEVICE_LIST_FILTER=$opt_f
+    else
+      DEVICE_LIST_FILTER=${DEVICE_LIST_FILTER:-'labels.auto-snapshot = true'}
+    fi
 }
 
 
@@ -76,7 +86,7 @@ setScriptOptions()
 
 getDeviceList()
 {
-    echo "$(gcloud --project=$PROJECT_ID compute disks list --filter 'labels.auto-snapshot = true' --format='value(name)')"
+    echo "$(gcloud --project=$PROJECT_ID compute disks list --filter "$DEVICE_LIST_FILTER" --format='value(name)')"
 }
 
 
