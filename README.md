@@ -27,6 +27,14 @@ docker run --rm -it --volumes-from gcloud-config \
   loicmahieu/google-compute-auto-snapshot
 ```
 
+Filter for snapshot (Used for create and delete snapshots) :
+```sh
+docker run --rm -it --volumes-from gcloud-config \
+  -e PROJECT_ID=myProject \
+  -e SNAPSHOT_LABEL='mykey=myvalue' \
+  loicmahieu/google-compute-auto-snapshot
+```
+
 ## License
 
 MIT License
